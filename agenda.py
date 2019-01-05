@@ -24,16 +24,31 @@ def read_addrbook(addrbook, fname):
     except IOError:
         print("[!] Address book file \"{}\" doesn't exist.".format(fname))
         print("    Creating new file")
-    return addrbook
 
 def write_addrbook(addrbook, fname):
     """Write collected addrbook data in fname file.
     """
     try:
-        with open(fname, "ab") as fopen:
+        with open(fname, "wb") as fopen:
             fopen.write(addrbook.SerializeToString())
     except IOError:
         SystemExit("[X] Error: Can not write file {}".format(fname))
+
+def print_addbook(addrbook):
+    """Prints the content of an addressbook
+    """
+    for people in addrbook.people:
+        print("Name: {}".format(people.name))
+        print("  ID: {}".format(people.id))
+        if people.email:
+            print("  email: {}".format(people.email))
+        for phone in people.phones:
+            print("  Phone number: {}".format(phone.number))
+            if phone.type:
+                print("    Phone type: {}".format(phone.type))
+        print("\n")
+    else:
+        print("End of Address book content")
 
 def prompt_entry(person):
     """Prompts for Person information to be added to the new Addressbook.
@@ -63,13 +78,31 @@ def main():
     """
     parsed = argument_parser()
     args = parsed.parse_args()
-    addbook_name = args.f
+    fname = args.f
 
     addrbook = person_pb2.AddressBook()
-    addrbook = read_addrbook(addrbook, addbook_name)
-    prompt_entry(addrbook.people.add())
-    write_addrbook(addrbook, addbook_name)
-    print("\n[*] New Addressbook entry successfully written")
+    read_addrbook(addrbook, fname)
+
+    welcome_msg = """\n\nDo you want to
+            (p)rint existing entries
+            (a)dd a new entry
+            (e)xit"""
+
+    while True:
+        print(welcome_msg)
+        option = raw_input("Option: ")
+        if option in ["p","P"]:
+            print_addbook(addrbook)
+        elif option in ["a","A"]:
+            prompt_entry(addrbook.people.add())
+            write_addrbook(addrbook, fname)
+            print("\n[*] New Addressbook entry successfully written")
+        elif option in ["e","E"]:
+            print("Exiting")
+            break
+        else:
+          print(welcome_msg)
+          option = raw_input("Option: ")
 
 if __name__ == "__main__":
     main()
